@@ -1,0 +1,33 @@
+name: CI
+
+on: [push]
+
+jobs:
+  build:
+    runs-on: [self-hosted, ubuntu-latest]
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    
+    steps:
+      - uses: actions/checkout@v3
+    
+      - name: Check if self-hosted runner is available
+        id: check_runner
+        run: |
+          if [[ "${{ github.event_name }}" == "push" ]]; then
+            echo "Self-hosted runner is not available"
+            exit 1
+          fi
+        
+      - name: Run job on GitHub Actions runner
+        if: steps.check_runner.outputs.self_hosted_unavailable == 'true'
+        runs-on: [ubuntu-latest, windows-latest, macos-latest]
+        steps:
+          - run: echo "Running on GitHub Actions runner"
+          
+      - name: Run job on self-hosted runner
+        if: steps.check_runner.outputs.self_hosted_unavailable != 'true'
+        runs-on: [self-hosted]
+        steps:
+          - run: echo "Running on self-hosted runner"
